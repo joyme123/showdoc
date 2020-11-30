@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: showdoc
+  labels:
+    app: showdoc
+spec:
+  selector:
+    matchLabels:
+      app: showdoc
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: showdoc
+    spec:
+      nodeName: kube-master-1
+      containers:
+        - name: showdoc
+          image: 'test.guosen.cargo.io/release/showdoc:v0.1.1'
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: /var/www/html
+              name: data
+          resources:
+            requests:
+              memory: 100Mi
+              cpu: 100m
+            limits:
+              memory: 400Mi
+              cpu: 200m
+      volumes:
+      - hostPath:
+          path: /showdoc
+          type: ""
+        name: data
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: showdoc
+    namespace: default
+spec:
+    type: ClusterIP
+    ports:
+    - name: tcp-80
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    selector:
+      app: showdoc
